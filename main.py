@@ -48,16 +48,18 @@ class RsHandler(tornado.web.RequestHandler):
             request = self._parse_json(self.request.body)
             members = request['members']
 
-            # start RS and get its' params
-            res = ha_tools.start_replica_set(members)
-
             try:
-                rs_uri, rs_name = res
-                self.write(self._template.load(op + self._ext).generate(rs_id=uuid.uuid4(), rs_uri=rs_uri, rs_name=rs_name))
+                # start RS and get its' params
+                res = ha_tools.start_replica_set(members)
             except:
                 raise tornado.httpserver._BadRequestException(
                     "Couldn't start RS!"
                 )
+
+            rs_uri, rs_name = res
+            rs_id = uuid.uuid4()
+
+            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_uri=rs_uri, rs_name=rs_name))
 
         # Stop rs
         elif op == 'stop':
@@ -68,8 +70,26 @@ class RsHandler(tornado.web.RequestHandler):
                     "Coudn't stop RS!"
                 )
 
+        # Get primary
+        elif op == 'get_primary':
+            request = self._parse_json(self.request.body)
+            rs_id = request['rs']['id']
+
+            rs_primary_uri = ha_tools.get_primary()
+
+            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_primary_uri=rs_primary_uri))
+
+        # Get secondaries
+        elif op == 'get_secondaries':
+            request = self._parse_json(self.request.body)
+            rs_id = request['rs']['id']
+
+            rs_secondaries_uris = ha_tools.get_secondaries()
+
+            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_secondaries_uris=rs_secondaries_uris))
+
 application = tornado.web.Application([
-    (r"/rs/(start|stop)", RsHandler)
+    (r"/rs/([_a-z]*)", RsHandler)
 ])
 
 if __name__ == "__main__":

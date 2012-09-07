@@ -1,0 +1,7 @@
+{
+  "rs" :
+  {
+    "id"    : "{{ rs_id }}",
+    "uri"   : "{{ rs_primary_uri }}"
+  }
+}
