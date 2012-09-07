@@ -88,6 +88,15 @@ class RsHandler(tornado.web.RequestHandler):
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_secondaries_uris=rs_secondaries_uris))
 
+        # Kill primary
+        elif op == 'kill_primary':
+            request = self._parse_json(self.request.body)
+            rs_id = request['rs']['id']
+
+            rs_killed_primary_uri = ha_tools.kill_primary()
+
+            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_killed_primary_uri=rs_killed_primary_uri))
+
 application = tornado.web.Application([
     (r"/rs/([_a-z]*)", RsHandler)
 ])
