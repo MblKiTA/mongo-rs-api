@@ -67,7 +67,7 @@ class RsHandler(tornado.web.RequestHandler):
                 ha_tools.kill_all_members()
             except:
                 raise tornado.httpserver._BadRequestException(
-                    "Coudn't stop RS!"
+                    "Couldn't stop RS!"
                 )
 
         # Get primary
@@ -106,7 +106,7 @@ class RsHandler(tornado.web.RequestHandler):
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_killed_secondary_uri=rs_killed_secondary_uri))
 
-        # Kill secondary
+        # Kill all secondaries
         elif op == 'kill_all_secondaries':
             request = self._parse_json(self.request.body)
             rs_id = request['rs']['id']
