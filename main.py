@@ -11,7 +11,7 @@ import uuid
 import json
 
 class RsHandler(tornado.web.RequestHandler):
-    # Reply tpls extension
+    # Reply's tpls extension
     _ext =  ".json"
     # Init template loader with 'tpl' dir
     _template = template.Loader('tpl')
