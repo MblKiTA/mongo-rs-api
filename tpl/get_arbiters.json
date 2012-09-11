@@ -1,0 +1,12 @@
+{
+  "rs" :
+  {
+    "id"    : "{{ rs_id }}",
+    "uris" :
+    [{
+       {% for rs_arbiter_uri in rs_arbiters_uris %}
+         "uri"   : "{{ rs_arbiter_uri }}"
+       {% end %}
+    }]
+  }
+}

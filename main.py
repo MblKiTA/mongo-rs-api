@@ -88,6 +88,15 @@ class RsHandler(tornado.web.RequestHandler):
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_secondaries_uris=rs_secondaries_uris))
 
+        # Get arbiters
+        elif op == 'get_arbiters':
+            request = self._parse_json(self.request.body)
+            rs_id = request['rs']['id']
+
+            rs_arbiters_uris = ha_tools.get_arbiters()
+
+            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_arbiters_uris=rs_arbiters_uris))
+
         # Kill primary
         elif op == 'kill_primary':
             request = self._parse_json(self.request.body)
