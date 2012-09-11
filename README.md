@@ -2,7 +2,9 @@ Dependencies:
 
 * [mongoDB](http://www.mongodb.org/)
 * [Tornado](http://www.tornadoweb.org/)
+
     pip install tornado
+    
 * Latest [PyMongo](https://github.com/mongodb/mongo-python-driver)
 
 Ensure that no mongod or mongos is running.
