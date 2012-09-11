@@ -7,7 +7,7 @@ Dependencies:
 
 * Latest [PyMongo](https://github.com/mongodb/mongo-python-driver)
 
-Ensure that no mongod or mongos is running.
+Ensure that no mongod or mongos are not running.
 
 Run this code as:
 
