@@ -16,4 +16,4 @@ Run this code as:
     python main.py
 
 This is a draft example of PyMongo HA tests:<br>
-https://github.com/MblKiTA/mongo-python-driver/blob/master/test/high_availability/test_ha_rest.py
+https://github.com/MblKiTA/mongo-python-driver/blob/rest_api/test/high_availability/test_ha_rest.py
