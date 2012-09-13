@@ -3,10 +3,10 @@
   {
     "id"    : "{{ rs_id }}",
     "uris" :
-    [{
+    [
        {% for rs_killed_secondary_uri in rs_killed_secondaries_uris %}
-         "uri"   : "{{ rs_killed_secondary_uri }}"
+         "{{ rs_killed_secondary_uri }}" {% if rs_killed_secondary_uri != rs_killed_secondaries_uris[-1] %}, {% end %}
        {% end %}
-    }]
+    ]
   }
 }
