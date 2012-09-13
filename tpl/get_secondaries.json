@@ -4,8 +4,8 @@
     "id"    : "{{ rs_id }}",
     "uris" :
     [
-       {% for rs_secondary_uri in rs_secondaries_uris %}
-         "{{ rs_secondary_uri }}" {% if rs_secondary_uri != rs_secondaries_uris[-1] %}, {% end %}
+       {% for i,rs_secondary_uri in enumerate(rs_secondaries_uris) %}
+         "{{ rs_secondary_uri }}" {% if i != len(rs_secondaries_uris)-1 %}, {% end %}
        {% end %}
     ]
   }
