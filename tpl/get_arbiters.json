@@ -3,10 +3,11 @@
   {
     "id"    : "{{ rs_id }}",
     "uris" :
-    [{
-       {% for rs_arbiter_uri in rs_arbiters_uris %}
-         "uri"   : "{{ rs_arbiter_uri }}"
+    [
+       {% for i,rs_arbiter_uri in enumerate(rs_arbiters_uris) %}
+         "{{ rs_arbiter_uri }}" {% if i != len(rs_arbiters_uris)-1 %}, {% end %}
        {% end %}
-    }]
+
+    ]
   }
 }
