@@ -133,7 +133,9 @@ class RsHandler(tornado.web.RequestHandler):
             request = self._parse_json(self.request.body)
             rs_id = request['rs']['id']
 
-            rs_primary_uri = ha_tools.get_primary()
+            found_index = self._get_index(rs, 'id', rs_id)
+
+            rs_primary_uri = rs[found_index]['primary']
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_primary_uri=rs_primary_uri))
 
@@ -142,7 +144,9 @@ class RsHandler(tornado.web.RequestHandler):
             request = self._parse_json(self.request.body)
             rs_id = request['rs']['id']
 
-            rs_secondaries_uris = ha_tools.get_secondaries()
+            found_index = self._get_index(rs, 'id', rs_id)
+
+            rs_secondaries_uris = rs[found_index]['secondaries']
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_secondaries_uris=rs_secondaries_uris))
 
