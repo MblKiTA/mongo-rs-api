@@ -76,7 +76,7 @@ class RsHandler(tornado.web.RequestHandler):
                 )
 
             # Let's gather all the info about RS and save it
-            rs_uri, rs_name, nodes = res
+            rs_uri, rs_name, nodes, arbiters = res
 
             # Try to connect to new RS
             try:
@@ -104,6 +104,7 @@ class RsHandler(tornado.web.RequestHandler):
             rs_t['primary'] = rs_uri
             rs_t['secondaries'] = secondaries_uris
             rs_t['nodes'] = nodes
+            rs_t['arbiters'] = arbiters
 
             rs.append(rs_t)
 
@@ -134,7 +135,6 @@ class RsHandler(tornado.web.RequestHandler):
             rs_id = request['rs']['id']
 
             found_index = self._get_index(rs, 'id', rs_id)
-
             rs_primary_uri = rs[found_index]['primary']
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_primary_uri=rs_primary_uri))
@@ -145,7 +145,6 @@ class RsHandler(tornado.web.RequestHandler):
             rs_id = request['rs']['id']
 
             found_index = self._get_index(rs, 'id', rs_id)
-
             rs_secondaries_uris = rs[found_index]['secondaries']
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_secondaries_uris=rs_secondaries_uris))
@@ -155,7 +154,8 @@ class RsHandler(tornado.web.RequestHandler):
             request = self._parse_json(self.request.body)
             rs_id = request['rs']['id']
 
-            rs_arbiters_uris = ha_tools.get_arbiters()
+            found_index = self._get_index(rs, 'id', rs_id)
+            rs_arbiters_uris = rs[found_index]['arbiters']
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_arbiters_uris=rs_arbiters_uris))
 
