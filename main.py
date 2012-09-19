@@ -1,4 +1,4 @@
-import sys, os, time
+import sys, time, random
 
 # Import pymongo
 sys.path.insert(0, 'mongo-python-driver')
@@ -14,6 +14,7 @@ import tornado.template as template
 
 import uuid
 import json
+
 
 new_repl_id = -1
 
@@ -51,6 +52,11 @@ class RsHandler(tornado.web.RequestHandler):
     def message(self, message):
         self.write(self._template.load('message' + self._ext).generate(message=message))
 
+    def error(self, message):
+        raise tornado.httpserver._BadRequestException(
+            message
+        )
+
     def get(self):
         """ Respond to a GET
         """
@@ -71,9 +77,7 @@ class RsHandler(tornado.web.RequestHandler):
                 # start RS and get its' params
                 res = ha_tools.start_replica_set(members, rs_name=rs_name)
             except:
-                raise tornado.httpserver._BadRequestException(
-                    "Couldn't start RS!"
-                )
+                self.error("Couldn't start RS!")
 
             # Let's gather all the info about RS and save it
             rs_uri, rs_name, nodes, arbiters = res
@@ -88,9 +92,7 @@ class RsHandler(tornado.web.RequestHandler):
                     except:
                         pass
             except:
-                raise tornado.httpserver._BadRequestException(
-                    "Couldn't connect to the new RS: " + rs_uri + ", " + rs_name
-                )
+                self.error("Couldn't connect to the new RS: " + rs_uri + ", " + rs_name)
 
             secondaries_uris = []
 
@@ -110,6 +112,8 @@ class RsHandler(tornado.web.RequestHandler):
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_uri=rs_uri, rs_name=rs_name))
 
+        # FIXME: Some checks should be implemented
+
         # Stop rs
         elif op == 'stop':
             request = self._parse_json(self.request.body)
@@ -121,9 +125,7 @@ class RsHandler(tornado.web.RequestHandler):
                 ha_tools.kill_members(rs[found_index]['nodes'].keys(), 2, rs[found_index]['nodes'])
                 rs_t = rs.pop(found_index)
             except:
-                raise tornado.httpserver._BadRequestException(
-                    "Couldn't stop RS!"
-                )
+                self.error("Couldn't stop RS!")
 
             rs_id = rs_t['id']
 
@@ -149,7 +151,7 @@ class RsHandler(tornado.web.RequestHandler):
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_secondaries_uris=rs_secondaries_uris))
 
-        # Get arbiters
+        # Get the arbiters
         elif op == 'get_arbiters':
             request = self._parse_json(self.request.body)
             rs_id = request['rs']['id']
@@ -159,32 +161,64 @@ class RsHandler(tornado.web.RequestHandler):
 
             self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_arbiters_uris=rs_arbiters_uris))
 
-        # Kill primary
+        # Kill the primary
         elif op == 'kill_primary':
             request = self._parse_json(self.request.body)
             rs_id = request['rs']['id']
 
-            rs_killed_primary_uri = ha_tools.kill_primary()
+            found_index = self._get_index(rs, 'id', rs_id)
 
-            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_killed_primary_uri=rs_killed_primary_uri))
+            try:
+                rs_primary_uri = rs[found_index]['primary']
+                ha_tools.kill_members([rs_primary_uri], 2, rs[found_index]['nodes'])
+                del rs[found_index]['primary']
+            except:
+                self.error("No primary found for this RS!")
 
-        # Kill secondary
+            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_killed_primary_uri=rs_primary_uri))
+
+        # Kill the secondary
         elif op == 'kill_secondary':
             request = self._parse_json(self.request.body)
             rs_id = request['rs']['id']
 
-            rs_killed_secondary_uri = ha_tools.kill_secondary()
+            try:
+                found_index = self._get_index(rs, 'id', rs_id)
+            except:
+                self.error("No secondaries found for this RS!")
 
-            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_killed_secondary_uri=rs_killed_secondary_uri))
+            rs_secondaries_uris = rs[found_index]['secondaries']
 
-        # Kill all secondaries
+            try:
+                # Get a random secondary for this RS
+
+                # Get a random index first
+                rs_secondary_uri_index = random.randrange( len(rs_secondaries_uris) )
+                # Pop out the element by this random index
+                rs_secondary_uri = rs[found_index]['secondaries'].pop(rs_secondary_uri_index)
+
+                ha_tools.kill_members([rs_secondary_uri], 2, rs[found_index]['nodes'])
+                del rs[found_index]['nodes'][rs_secondary_uri]
+            except:
+                self.error("No secondaries found for this RS!")
+
+            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_killed_secondary_uri=rs_secondary_uri))
+
+        # Kill all the secondaries
         elif op == 'kill_all_secondaries':
             request = self._parse_json(self.request.body)
             rs_id = request['rs']['id']
 
-            rs_killed_secondaries_uris = ha_tools.kill_all_secondaries()
+            found_index = self._get_index(rs, 'id', rs_id)
 
-            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_killed_secondaries_uris=rs_killed_secondaries_uris))
+            try:
+                rs_secondaries_uris = rs[found_index]['secondaries']
+                ha_tools.kill_members(rs_secondaries_uris, 2, rs[found_index]['nodes'])
+                del rs[found_index]['secondaries']
+            except:
+                self.error("No secondaries found for this RS!")
+
+            self.write(self._template.load(op + self._ext).generate(rs_id=rs_id, rs_killed_secondaries_uris=rs_secondaries_uris))
 
 
 
